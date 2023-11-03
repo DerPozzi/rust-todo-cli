@@ -6,7 +6,7 @@ use clap::{command, Parser, ValueEnum};
 use dotenv;
 
 mod database;
-use database::{create_db_pool, create_table, get_all_tasks, insert_new_todo, Todo};
+use database::{create_db_pool, create_table, get_all_tasks, insert_new_todo, select_by_id, Todo};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about=None)]
@@ -63,9 +63,13 @@ async fn main() -> Result<(), Error> {
         }
         Mode::Update => {}
         Mode::Select => {
-            if let Some(_id) = args.id {
-                println!("Displaying todo [{}]", _id);
-                // TODO: call select_by_id
+            if let Some(id) = args.id {
+                println!("Displaying todo [{}]", id);
+                let todo = select_by_id(&pool, id).await?;
+                println!(
+                    "Id: {} - {} - {} : {}",
+                    todo.id, todo.title, todo.description, todo.completed
+                );
             } else {
                 let rows = get_all_tasks(&pool).await?;
                 println!("Displaying all Todos");

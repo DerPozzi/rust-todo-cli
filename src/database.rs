@@ -1,4 +1,3 @@
-// TODO: select todo by id
 use sqlx::postgres::PgPoolOptions;
 
 use sqlx::{FromRow, Pool, Postgres};
@@ -63,4 +62,12 @@ pub async fn insert_new_todo(pool: &Pool<Postgres>, task: Todo) -> Result<(), sq
         .execute(pool)
         .await?;
     Ok(())
+}
+
+pub async fn select_by_id(pool: &Pool<Postgres>, id: i32) -> Result<DbTodo, sqlx::Error> {
+    let todo = sqlx::query_as::<_, DbTodo>("SELECT * FROM todo WHERE id=$1")
+        .bind(id)
+        .fetch_one(pool)
+        .await?;
+    Ok(todo)
 }
