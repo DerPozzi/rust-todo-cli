@@ -7,7 +7,8 @@ use dotenv;
 
 mod database;
 use database::{
-    create_db_pool, create_table, delete_by_id, get_all_tasks, insert_new_todo, select_by_id, Todo,
+    create_db_pool, create_table, delete_by_id, get_all_tasks, insert_new_todo, select_by_id,
+    update_by_id, Todo,
 };
 
 #[derive(Parser, Debug)]
@@ -63,7 +64,32 @@ async fn main() -> Result<(), Error> {
             );
             insert_new_todo(&pool, new_task).await?;
         }
-        Mode::Update => {}
+        Mode::Update => {
+            if let Some(id) = args.id {
+                let old_todo = select_by_id(&pool, id).await?;
+                let updated_todo = Todo::new(
+                    {
+                        if let Some(title) = args.title {
+                            title
+                        } else {
+                            old_todo.title
+                        }
+                    },
+                    {
+                        if let Some(desc) = args.description {
+                            desc
+                        } else {
+                            old_todo.description
+                        }
+                    },
+                    old_todo.completed || args.completed,
+                );
+
+                update_by_id(&pool, id, updated_todo).await?;
+            } else {
+                return Err(Error::msg("Id must be provided"));
+            }
+        }
         Mode::Select => {
             if let Some(id) = args.id {
                 println!("Displaying todo [{}]", id);

@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS todo (
 }
 
 pub async fn get_all_tasks(pool: &Pool<Postgres>) -> Result<Vec<DbTodo>, sqlx::Error> {
-    let rows = sqlx::query_as::<_, DbTodo>("SELECT * FROM todo")
+    let rows = sqlx::query_as::<_, DbTodo>("SELECT * FROM todo ORDER BY id")
         .fetch_all(pool)
         .await?;
     Ok(rows)
@@ -74,6 +74,21 @@ pub async fn select_by_id(pool: &Pool<Postgres>, id: i32) -> Result<DbTodo, sqlx
 
 pub async fn delete_by_id(pool: &Pool<Postgres>, id: i32) -> Result<(), sqlx::Error> {
     sqlx::query("DELETE FROM todo WHERE id=$1")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn update_by_id(
+    pool: &Pool<Postgres>,
+    id: i32,
+    updated_task: Todo,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE todo SET title=$1 ,description=$2 , completed=$3 WHERE id=$4")
+        .bind(updated_task.title)
+        .bind(updated_task.description)
+        .bind(updated_task.completed)
         .bind(id)
         .execute(pool)
         .await?;
