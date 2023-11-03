@@ -1,5 +1,5 @@
 /*
- TODOs: update todo, delete todo, pretty print
+ TODOs: update todo, pretty print
 */
 use anyhow::{self, Error};
 use clap::{command, Parser, ValueEnum};
