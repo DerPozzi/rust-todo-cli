@@ -1,6 +1,6 @@
-// TODO: Clap Argument parsing
-// TODO: Pretty print the tasks
-
+/*
+ TODOs: update todo, delete todo, pretty print
+*/
 use anyhow::{self, Error};
 use clap::{command, Parser, ValueEnum};
 use dotenv;
