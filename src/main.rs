@@ -6,7 +6,9 @@ use clap::{command, Parser, ValueEnum};
 use dotenv;
 
 mod database;
-use database::{create_db_pool, create_table, get_all_tasks, insert_new_todo, select_by_id, Todo};
+use database::{
+    create_db_pool, create_table, delete_by_id, get_all_tasks, insert_new_todo, select_by_id, Todo,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about=None)]
@@ -81,7 +83,13 @@ async fn main() -> Result<(), Error> {
                 }
             }
         }
-        Mode::Delete => {}
+        Mode::Delete => {
+            if let Some(id) = args.id {
+                delete_by_id(&pool, id).await?;
+            } else {
+                return Err(Error::msg("Id must be provided"));
+            }
+        }
     }
 
     Ok(())

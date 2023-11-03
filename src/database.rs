@@ -71,3 +71,11 @@ pub async fn select_by_id(pool: &Pool<Postgres>, id: i32) -> Result<DbTodo, sqlx
         .await?;
     Ok(todo)
 }
+
+pub async fn delete_by_id(pool: &Pool<Postgres>, id: i32) -> Result<(), sqlx::Error> {
+    sqlx::query("DELETE FROM todo WHERE id=$1")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
