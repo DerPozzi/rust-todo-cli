@@ -1,32 +1,83 @@
 // TODO: Clap Argument parsing
 // TODO: Pretty print the tasks
 
+use anyhow::{self, Error};
+use clap::{command, Parser, ValueEnum};
 use dotenv;
 
 mod database;
 use database::{create_db_pool, create_table, get_all_tasks, insert_new_todo, Todo};
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about=None)]
+struct Args {
+    #[arg(value_enum)]
+    mode: Mode,
+    /// Id to to get from DB
+    #[arg(short)]
+    id: Option<i32>,
+    /// Title of the new todo
+    #[arg(short)]
+    title: Option<String>,
+    /// Description of the todo
+    #[arg(short)]
+    description: Option<String>,
+    /// Is Todo completed?
+    #[arg(short)]
+    completed: bool,
+}
+
+#[derive(ValueEnum, Debug, Clone)]
+enum Mode {
+    Insert,
+    Update,
+    Select,
+    Delete,
+}
+
 #[tokio::main]
-async fn main() -> Result<(), sqlx::Error> {
+
+async fn main() -> Result<(), Error> {
+    let args = Args::parse();
     dotenv::dotenv().ok();
 
-    let new_task = Todo::new("Title".to_string(), "Description".to_string(), false);
     let db_url = std::env::var("DB_URL").expect("db_url must be set");
+    let pool = create_db_pool(&db_url)
+        .await
+        .expect("Connection to db failed");
+    create_table(&pool)
+        .await
+        .expect("Creating table in DB failed");
 
-    let pool = create_db_pool(&db_url).await?;
-    // Create table if not exist
-    create_table(&pool).await?;
-    match insert_new_todo(&pool, new_task).await {
-        Ok(_) => {}
-        Err(msg) => println!("ERROR: {}", msg),
-    }
-    let rows = get_all_tasks(&pool).await?;
-
-    for task in rows {
-        println!(
-            "Id: {} - {} - {} : {}",
-            task.id, task.title, task.description, task.completed
-        )
+    match args.mode {
+        Mode::Insert => {
+            if let None = args.title {
+                return Err(Error::msg("Title must be provided"));
+            }
+            let new_task = Todo::new(
+                args.title.unwrap(),
+                args.description.unwrap_or("".to_string()),
+                args.completed,
+            );
+            insert_new_todo(&pool, new_task).await?;
+        }
+        Mode::Update => {}
+        Mode::Select => {
+            if let Some(_id) = args.id {
+                println!("Displaying todo [{}]", _id);
+                // TODO: call select_by_id
+            } else {
+                let rows = get_all_tasks(&pool).await?;
+                println!("Displaying all Todos");
+                for task in rows {
+                    println!(
+                        "Id: {} - {} - {} : {}",
+                        task.id, task.title, task.description, task.completed
+                    )
+                }
+            }
+        }
+        Mode::Delete => {}
     }
 
     Ok(())
