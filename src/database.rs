@@ -1,4 +1,6 @@
+use core::fmt;
 use sqlx::postgres::PgPoolOptions;
+use std::fmt::Display;
 
 use sqlx::{FromRow, Pool, Postgres};
 
@@ -21,6 +23,15 @@ impl Todo {
             description: desc,
             completed: completed,
         }
+    }
+}
+impl fmt::Display for DbTodo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "***** {} : {} *****\n", self.title, self.id)?;
+        writeln!(f, "{}", self.description)?;
+        writeln!(f, "Completed: {}", self.completed)?;
+        writeln!(f, "\n******************")?;
+        Ok(())
     }
 }
 pub async fn create_db_pool(url: &str) -> Result<Pool<Postgres>, sqlx::Error> {

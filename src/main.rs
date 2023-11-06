@@ -94,18 +94,14 @@ async fn main() -> Result<(), Error> {
             if let Some(id) = args.id {
                 println!("Displaying todo [{}]", id);
                 let todo = select_by_id(&pool, id).await?;
-                println!(
-                    "Id: {} - {} - {} : {}",
-                    todo.id, todo.title, todo.description, todo.completed
-                );
+                println!();
+                println!("{}", todo);
             } else {
                 let rows = get_all_tasks(&pool).await?;
                 println!("Displaying all Todos");
+                println!();
                 for task in rows {
-                    println!(
-                        "Id: {} - {} - {} : {}",
-                        task.id, task.title, task.description, task.completed
-                    )
+                    println!("{}", task)
                 }
             }
         }
